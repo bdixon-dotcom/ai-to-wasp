@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buyer Portal | Wasp Barcode Technologies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+*{ box-sizing:border-box; margin:0; padding:0; }
+:root{
+  --ink:#0d0d0d; --ink-soft:#33343a; --muted:#6b6d76; --faint:#9a9ba3;
+  --mist:#f6f7f9; --panel:#ffffff; --line:#e6e6ea;
+  --gold:#f5a623; --gold-dark:#d88f12; --blue:#2f5fe0; --blue-dark:#2249b8;
+  --green:#17a673; --green-bg:#e8f7f1; --amber:#f5a623; --amber-bg:#fef1de; --red:#e5484d; --red-bg:#fdeceb;
+  --display:'Archivo', sans-serif; --body:'Inter', -apple-system, sans-serif;
+  --radius:14px; --shadow:0 1px 2px rgba(13,13,13,.05), 0 8px 20px rgba(13,13,13,.06);
+}
+body{ font-family:var(--body); color:var(--ink); background:var(--mist); font-size:14px; line-height:1.5; overflow-x:hidden; }
+h1,h2,h3,h4{ font-family:var(--display); color:var(--ink); }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; }
+::placeholder{ color:var(--faint); }
+.table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+/* ---- App shell ---- */
+.portal-topbar{
+  height:64px; background:#fff; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:20px;
+  padding:0 24px; position:sticky; top:0; z-index:40;
+}
+.portal-topbar .back{ font-size:12.5px; font-weight:700; color:var(--muted); display:flex; align-items:center; gap:6px; flex:none; }
+.portal-topbar .back svg{ width:15px; height:15px; }
+.portal-topbar .logo{ display:flex; align-items:center; gap:8px; font-family:var(--display); font-weight:900; font-size:18px; flex:none; }
+.portal-topbar .logo .badge{ font-size:9px; font-weight:800; background:var(--ink); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.04em; }
+.quick-order{ flex:1; max-width:560px; margin:0 auto; position:relative; }
+.quick-order input{
+  width:100%; border:1.5px solid var(--line); background:var(--mist); border-radius:10px; padding:9px 14px 9px 38px; font-size:13.5px; font-family:inherit;
+}
+.quick-order input:focus{ outline:none; border-color:var(--blue); background:#fff; }
+.quick-order svg{ position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--faint); }
+.quick-order .hint{ position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:10.5px; color:var(--faint); background:#fff; border:1px solid var(--line); border-radius:5px; padding:2px 6px; }
+.topbar-right{ display:flex; align-items:center; gap:16px; flex:none; }
+.topbar-icon-btn{ position:relative; width:34px; height:34px; border-radius:50%; border:none; background:var(--mist); display:flex; align-items:center; justify-content:center; }
+.topbar-icon-btn svg{ width:17px; height:17px; color:var(--ink-soft); }
+.topbar-icon-btn .dot{ position:absolute; top:6px; right:7px; width:7px; height:7px; border-radius:50%; background:var(--red); border:1.5px solid #fff; }
+.avatar-btn{ display:flex; align-items:center; gap:8px; border:none; background:none; padding:2px; }
+.avatar-circle{ width:32px; height:32px; border-radius:50%; background:var(--blue); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12.5px; flex:none; }
+.avatar-btn .who{ text-align:left; display:none; }
+.avatar-btn .who b{ display:block; font-size:12.5px; }
+.avatar-btn .who span{ font-size:11px; color:var(--muted); }
+@media (min-width:900px){ .avatar-btn .who{ display:block; } }
+
+.portal-body{ display:flex; min-height:calc(100vh - 64px); }
+.portal-sidebar{
+  width:236px; flex:none; background:#fff; border-right:1px solid var(--line); padding:20px 14px; position:sticky; top:64px; height:calc(100vh - 64px); overflow-y:auto;
+}
+.portal-sidebar .company{ padding:8px 10px 18px; border-bottom:1px solid var(--line); margin-bottom:14px; }
+.portal-sidebar .company b{ display:block; font-size:13.5px; font-weight:800; }
+.portal-sidebar .company span{ font-size:11.5px; color:var(--muted); }
+.side-link{
+  display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:9px; font-size:13.5px; font-weight:700; color:var(--ink-soft);
+  margin-bottom:2px; border:none; background:none; width:100%; text-align:left;
+}
+.side-link svg{ width:17px; height:17px; color:var(--muted); flex:none; }
+.side-link:hover{ background:var(--mist); }
+.side-link.active{ background:#eaf0ff; color:var(--blue-dark); }
+.side-link.active svg{ color:var(--blue); }
+.side-link .count{ margin-left:auto; font-size:10.5px; font-weight:800; background:var(--mist); color:var(--muted); padding:1px 7px; border-radius:999px; }
+.side-link.active .count{ background:#fff; color:var(--blue); }
+.side-divider{ font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); margin:16px 10px 8px; }
+
+.portal-main{ flex:1; min-width:0; padding:28px 32px 60px; max-width:1200px; }
+.portal-panel{ display:none; }
+.portal-panel.active{ display:block; }
+.panel-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:24px; flex-wrap:wrap; }
+.panel-head h1{ font-size:24px; font-weight:900; }
+.panel-head p{ color:var(--muted); font-size:13px; margin-top:4px; }
+
+/* ---- cards / grid ---- */
+.card{ background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:20px; }
+.grid4{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-bottom:24px; }
+.grid3{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-bottom:24px; }
+.grid2{ display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:16px; margin-bottom:24px; align-items:start; }
+@media (max-width:1000px){ .grid4{ grid-template-columns:repeat(2,minmax(0,1fr)); } .grid3{ grid-template-columns:repeat(2,minmax(0,1fr)); } .grid2{ grid-template-columns:minmax(0,1fr); } }
+@media (max-width:560px){ .grid4, .grid3{ grid-template-columns:minmax(0,1fr); } }
+
+.stat-card .lbl{ font-size:11.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); margin-bottom:10px; }
+.stat-card .val{ font-family:var(--display); font-size:26px; font-weight:900; }
+.stat-card .sub{ font-size:12px; color:var(--muted); margin-top:4px; }
+.progress-track{ height:8px; border-radius:999px; background:var(--mist); overflow:hidden; margin-top:10px; }
+.progress-fill{ height:100%; background:var(--blue); border-radius:999px; }
+.progress-fill.warn{ background:var(--amber); }
+
+.section-title{ font-size:15px; font-weight:800; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; }
+.section-title .link{ font-size:12px; font-weight:700; color:var(--blue); }
+
+/* ---- status pills ---- */
+.pill{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:800; padding:3px 9px; border-radius:999px; }
+.pill::before{ content:''; width:6px; height:6px; border-radius:50%; }
+.pill.green{ background:var(--green-bg); color:#0d7a52; } .pill.green::before{ background:var(--green); }
+.pill.amber{ background:var(--amber-bg); color:#8a5b0a; } .pill.amber::before{ background:var(--amber); }
+.pill.red{ background:var(--red-bg); color:#b4302f; } .pill.red::before{ background:var(--red); }
+.pill.blue{ background:#eaf0ff; color:var(--blue-dark); } .pill.blue::before{ background:var(--blue); }
+.pill.gray{ background:var(--mist); color:var(--muted); } .pill.gray::before{ background:var(--faint); }
+
+/* ---- table ---- */
+.dtable{ width:100%; border-collapse:collapse; }
+.dtable th{ text-align:left; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); padding:0 12px 10px; border-bottom:1px solid var(--line); }
+.dtable td{ padding:12px; border-bottom:1px solid var(--line); font-size:13px; vertical-align:middle; }
+.dtable tr:last-child td{ border-bottom:none; }
+.dtable tr:hover td{ background:var(--mist); }
+.dtable .mono{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); }
+.dtable .btn-sm{ font-size:11.5px; font-weight:700; padding:6px 11px; border-radius:7px; border:1.5px solid var(--line); background:#fff; }
+.dtable .btn-sm:hover{ border-color:var(--blue); color:var(--blue); }
+.dtable input[type="checkbox"]{ width:15px; height:15px; }
+
+/* ---- buttons ---- */
+.btn{ display:inline-flex; align-items:center; gap:7px; font-weight:700; font-size:13px; padding:10px 18px; border-radius:10px; border:none; }
+.btn-gold{ background:var(--gold); color:#22160a; } .btn-gold:hover{ background:var(--gold-dark); }
+.btn-blue{ background:var(--blue); color:#fff; } .btn-blue:hover{ background:var(--blue-dark); }
+.btn-outline{ background:#fff; border:1.5px solid var(--line); color:var(--ink); } .btn-outline:hover{ border-color:var(--blue); color:var(--blue); }
+.btn-sm2{ font-size:12px; padding:7px 13px; }
+
+/* ---- filter bar ---- */
+.filter-bar{ display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+.filter-bar select, .filter-bar input[type="text"]{ border:1.5px solid var(--line); border-radius:8px; padding:8px 11px; font-size:12.5px; font-family:inherit; background:#fff; }
+.filter-bar .spacer{ flex:1; }
+
+/* ---- AM card ---- */
+.am-card{ display:flex; gap:16px; align-items:flex-start; }
+.am-avatar{ width:56px; height:56px; border-radius:50%; background:linear-gradient(140deg,var(--blue),var(--blue-dark)); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:20px; flex:none; }
+.am-card h4{ font-size:15px; font-weight:800; }
+.am-card .role{ font-size:12px; color:var(--muted); margin-bottom:10px; }
+.am-actions{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+
+/* ---- ticket / kb ---- */
+.ticket-row{ display:flex; align-items:center; gap:14px; padding:13px 0; border-bottom:1px solid var(--line); }
+.ticket-row:last-child{ border-bottom:none; }
+.ticket-row .num{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--muted); width:64px; flex:none; }
+.ticket-row .subj{ flex:1; font-weight:700; font-size:13px; }
+.ticket-row .meta{ font-size:11.5px; color:var(--muted); }
+.kb-item{ display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); font-size:13px; font-weight:600; }
+.kb-item:last-child{ border-bottom:none; }
+.kb-item svg{ width:15px; height:15px; color:var(--muted); flex:none; }
+
+/* ---- team ---- */
+.role-badge{ font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:6px; background:var(--mist); color:var(--ink-soft); }
+.role-badge.admin{ background:#eaf0ff; color:var(--blue-dark); }
+
+/* ---- changelog ---- */
+.change-item{ display:flex; gap:16px; padding:16px 0; border-bottom:1px solid var(--line); }
+.change-item:last-child{ border-bottom:none; }
+.change-tag{ flex:none; font-size:10.5px; font-weight:800; padding:3px 9px; border-radius:6px; height:fit-content; }
+.change-tag.new{ background:var(--green-bg); color:#0d7a52; }
+.change-tag.improved{ background:#eaf0ff; color:var(--blue-dark); }
+.change-tag.fixed{ background:var(--mist); color:var(--muted); }
+.change-item .date{ font-size:11px; color:var(--faint); margin-top:2px; }
+.change-item h4{ font-size:13.5px; font-weight:800; margin-bottom:3px; }
+.change-item p{ font-size:12.5px; color:var(--muted); }
+
+/* ---- products ---- */
+.stock-dot{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; }
+.stock-dot::before{ content:''; width:7px; height:7px; border-radius:50%; }
+.stock-dot.in::before{ background:var(--green); } .stock-dot.in{ color:#0d7a52; }
+.stock-dot.low::before{ background:var(--amber); } .stock-dot.low{ color:#8a5b0a; }
+.stock-dot.out::before{ background:var(--red); } .stock-dot.out{ color:#b4302f; }
+.price-cell .list{ text-decoration:line-through; color:var(--faint); font-size:11.5px; margin-right:6px; }
+.price-cell .yours{ font-weight:800; color:var(--ink); }
+
+/* ---- modal ---- */
+.modal-overlay{ position:fixed; inset:0; background:rgba(13,13,13,.5); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; }
+.modal-overlay.show{ display:flex; }
+.modal-box{ background:#fff; border-radius:16px; padding:28px; width:100%; max-width:420px; }
+.modal-box h3{ font-size:17px; font-weight:800; margin-bottom:18px; }
+.modal-box label{ display:block; font-size:12px; font-weight:800; margin-bottom:6px; margin-top:14px; }
+.modal-box label:first-of-type{ margin-top:0; }
+.modal-box input, .modal-box select{ width:100%; border:1.5px solid var(--line); border-radius:9px; padding:10px 12px; font-size:13.5px; font-family:inherit; }
+.modal-actions{ display:flex; gap:10px; margin-top:22px; }
+.modal-actions .btn{ flex:1; justify-content:center; }
+.modal-close{ position:absolute; top:18px; right:18px; border:none; background:none; width:28px; height:28px; }
+
+/* ---- mobile sidebar toggle ---- */
+.mobile-nav-toggle{ display:none; border:none; background:var(--mist); width:36px; height:36px; border-radius:9px; align-items:center; justify-content:center; }
+@media (max-width:860px){
+  .mobile-nav-toggle{ display:flex; }
+  .portal-sidebar{ position:fixed; left:-260px; top:64px; height:calc(100vh - 64px); z-index:50; transition:left .2s ease; box-shadow:var(--shadow); }
+  .portal-sidebar.open{ left:0; }
+  .quick-order{ display:none; }
+  .portal-main{ padding:20px 16px 50px; }
+}
+</style>
+</head>
+<body>
+
+<header class="portal-topbar">
+  <button class="mobile-nav-toggle" id="navToggle" aria-label="Toggle menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  <a href="index.html" class="logo">wasp<span class="badge">BUYER PORTAL</span></a>
+  <div class="quick-order">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="quickOrderInput" placeholder="Quick order — enter a SKU or product name…">
+    <span class="hint">↵ to add</span>
+  </div>
+  <div class="topbar-right">
+    <a href="index.html" class="back" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>waspbarcode.com</a>
+    <button class="topbar-icon-btn" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dot"></span></button>
+    <button class="avatar-btn">
+      <div class="avatar-circle">JR</div>
+      <div class="who"><b>Jordan Reyes</b><span>Acme Manufacturing</span></div>
+    </button>
+  </div>
+</header>
+
+<div class="portal-body">
+  <nav class="portal-sidebar" id="sidebar">
+    <div class="company"><b>Acme Manufacturing</b><span>Account #AM-40218 · Net 30</span></div>
+    <button class="side-link active" data-panel="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>Dashboard</button>
+    <button class="side-link" data-panel="orders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg>Orders</button>
+    <button class="side-link" data-panel="invoices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 7h6M9 11h6M9 15h3"/></svg>Invoices &amp; Billing<span class="count">3</span></button>
+    <button class="side-link" data-panel="products"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.6 12.6 12.6 20.6a2 2 0 0 1-2.8 0l-7.4-7.4V5a2 2 0 0 1 2-2h7.6l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></svg>Products &amp; Pricing</button>
+    <div class="side-divider">Account</div>
+    <button class="side-link" data-panel="team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5M11 20c0-3 2.5-5 5-5s5 2 5 5"/></svg>Team</button>
+    <button class="side-link" data-panel="support"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.3 9a2.7 2.7 0 0 1 5 1.4c0 1.7-2.3 1.9-2.3 3.6"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></svg>Support<span class="count">2</span></button>
+    <button class="side-link" data-panel="accountmgr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="3" y="13" width="4" height="6" rx="1.5"/><rect x="17" y="13" width="4" height="6" rx="1.5"/><path d="M19 19v1a3 3 0 0 1-3 3h-3"/></svg>Account Manager</button>
+    <button class="side-link" data-panel="changelog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 4 14h7l-1 8 9-12h-7Z"/></svg>What's New</button>
+  </nav>
+
+  <main class="portal-main">
+
+    <!-- DASHBOARD -->
+    <section class="portal-panel active" id="panel-dashboard">
+      <div class="panel-head">
+        <div><h1>Welcome back, Jordan.</h1><p>Here's what's happening on your Acme Manufacturing account.</p></div>
+      </div>
+
+      <div class="grid4">
+        <div class="card stat-card">
+          <div class="lbl">Current Plan</div>
+          <div class="val" style="font-size:17px;">Wasp Inventory — Complete</div>
+          <div class="sub">18 of 25 seats used</div>
+          <div class="progress-track"><div class="progress-fill" style="width:72%;"></div></div>
+        </div>
+        <div class="card stat-card">
+          <div class="lbl">Next Renewal</div>
+          <div class="val">Nov 14</div>
+          <div class="sub">Auto-renews annually · $10,750/yr</div>
+        </div>
+        <div class="card stat-card">
+          <div class="lbl">Outstanding Balance</div>
+          <div class="val" style="color:var(--red);">$4,280.00</div>
+          <div class="sub">1 invoice due Sep 15</div>
+        </div>
+        <div class="card stat-card">
+          <div class="lbl">Open Support Tickets</div>
+          <div class="val">2</div>
+          <div class="sub">1 awaiting your reply</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="section-title">Recent Orders<a href="#" class="link" data-goto="orders">View all →</a></div>
+          <div class="table-scroll"><table class="dtable">
+            <thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="mono">#SO-88213</td><td>Aug 22, 2026</td><td>WWS550 Scanners ×6</td><td>$1,614.00</td><td><span class="pill green">Delivered</span></td><td><button class="btn-sm">Reorder</button></td></tr>
+              <tr><td class="mono">#SO-88147</td><td>Aug 9, 2026</td><td>Polyester Labels ×20 rolls</td><td>$486.00</td><td><span class="pill amber">Shipped</span></td><td><button class="btn-sm">Reorder</button></td></tr>
+              <tr><td class="mono">#SO-87990</td><td>Jul 28, 2026</td><td>WPL305 Printer ×2</td><td>$998.00</td><td><span class="pill green">Delivered</span></td><td><button class="btn-sm">Reorder</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="section-title">Your Account Manager</div>
+          <div class="am-card">
+            <div class="am-avatar">RC</div>
+            <div>
+              <h4>Renee Castillo</h4>
+              <div class="role">Senior Account Manager</div>
+              <div class="am-actions">
+                <button class="btn btn-blue btn-sm2"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4A8.4 8.4 0 0 1 3.6 11.5 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5Z"/></svg>Chat</button>
+                <button class="btn btn-outline btn-sm2">Schedule Call</button>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line); font-size:12px; color:var(--muted);">
+            "Following up on your Q3 scanner order — let me know if the new WWS550 batch needs adjusting." <span style="color:var(--faint);">— Aug 20</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="section-title">Frequently Ordered — Stock Status</div>
+          <div class="table-scroll"><table class="dtable">
+            <thead><tr><th>Item</th><th>Your Price</th><th>Availability</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>WWS550 Barcode Scanner</td><td class="price-cell"><span class="list">$289</span><span class="yours">$269.00</span></td><td><span class="stock-dot in">In Stock</span></td><td><button class="btn-sm">Add</button></td></tr>
+              <tr><td>Polyester Gloss Labels (1"×1")</td><td class="price-cell"><span class="yours">$24.30</span>/roll</td><td><span class="stock-dot low">Low Stock</span></td><td><button class="btn-sm">Add</button></td></tr>
+              <tr><td>WPL305 Label Printer</td><td class="price-cell"><span class="list">$549</span><span class="yours">$499.00</span></td><td><span class="stock-dot out">Backordered</span></td><td><button class="btn-sm">Notify Me</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="section-title">What's New<a href="#" class="link" data-goto="changelog">View all →</a></div>
+          <div class="change-item" style="padding-top:0;">
+            <span class="change-tag new">New</span>
+            <div><h4>Bulk reorder from order history</h4><p>Select multiple past orders and reorder every line item at once.</p></div>
+          </div>
+          <div class="change-item">
+            <span class="change-tag improved">Improved</span>
+            <div><h4>Faster invoice search</h4><p>Filter invoices by status, PO number or date range.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ORDERS -->
+    <section class="portal-panel" id="panel-orders">
+      <div class="panel-head"><div><h1>Orders</h1><p>Your full order history, filterable and ready to reorder.</p></div></div>
+      <div class="filter-bar">
+        <select><option>All categories</option><option>Scanners</option><option>Printers</option><option>Labels &amp; Ribbons</option><option>Software</option></select>
+        <select><option>Last 90 days</option><option>Last 6 months</option><option>This year</option><option>All time</option></select>
+        <input type="text" placeholder="Search order # or item…">
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm2">Reorder Selected</button>
+      </div>
+      <div class="card" style="padding:0;">
+        <div class="table-scroll"><table class="dtable">
+          <thead><tr><th style="width:30px;"><input type="checkbox"></th><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><input type="checkbox"></td><td class="mono">#SO-88213</td><td>Aug 22, 2026</td><td>WWS550 Scanners ×6</td><td>$1,614.00</td><td><span class="pill green">Delivered</span></td><td><button class="btn-sm">Reorder</button></td></tr>
+            <tr><td><input type="checkbox"></td><td class="mono">#SO-88147</td><td>Aug 9, 2026</td><td>Polyester Labels ×20 rolls</td><td>$486.00</td><td><span class="pill amber">Shipped</span></td><td><button class="btn-sm">Reorder</button></td></tr>
+            <tr><td><input type="checkbox"></td><td class="mono">#SO-87990</td><td>Jul 28, 2026</td><td>WPL305 Printer ×2</td><td>$998.00</td><td><span class="pill green">Delivered</span></td><td><button class="btn-sm">Reorder</button></td></tr>
+            <tr><td><input type="checkbox"></td><td class="mono">#SO-87811</td><td>Jul 12, 2026</td><td>Wasp Inventory — 5 add'l seats</td><td>$1,075.00</td><td><span class="pill green">Delivered</span></td><td><button class="btn-sm">Reorder</button></td></tr>
+            <tr><td><input type="checkbox"></td><td class="mono">#SO-87602</td><td>Jun 30, 2026</td><td>Vinyl Destructible Labels ×10</td><td>$342.00</td><td><span class="pill green">Delivered</span></td><td><button class="btn-sm">Reorder</button></td></tr>
+            <tr><td><input type="checkbox"></td><td class="mono">#SO-87455</td><td>Jun 18, 2026</td><td>WWS550 Scanner ×1</td><td>$269.00</td><td><span class="pill red">Cancelled</span></td><td><button class="btn-sm">Reorder</button></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- INVOICES -->
+    <section class="portal-panel" id="panel-invoices">
+      <div class="panel-head"><div><h1>Invoices &amp; Billing</h1><p>Outstanding balances, payment history, and your saved payment methods.</p></div></div>
+      <div class="grid3">
+        <div class="card stat-card"><div class="lbl">Outstanding Balance</div><div class="val" style="color:var(--red);">$4,280.00</div><div class="sub">2 invoices open</div></div>
+        <div class="card stat-card"><div class="lbl">Credit Terms</div><div class="val">Net 30</div><div class="sub">Credit limit: $15,000</div></div>
+        <div class="card stat-card"><div class="lbl">Available Credit</div><div class="val">$10,720</div><div class="sub">71% available</div></div>
+      </div>
+
+      <div class="section-title">Outstanding Invoices<button class="btn btn-gold btn-sm2">Pay Selected</button></div>
+      <div class="card" style="padding:0; margin-bottom:24px;">
+        <div class="table-scroll"><table class="dtable">
+          <thead><tr><th style="width:30px;"><input type="checkbox"></th><th>Invoice</th><th>Order Ref</th><th>Due Date</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><input type="checkbox" checked></td><td class="mono">INV-40881</td><td class="mono">#SO-88147</td><td>Sep 8, 2026</td><td>$486.00</td><td><span class="pill amber">Due Soon</span></td><td><button class="btn-sm">Pay Now</button></td></tr>
+            <tr><td><input type="checkbox" checked></td><td class="mono">INV-40756</td><td class="mono">#SO-87811</td><td>Aug 11, 2026</td><td>$3,794.00</td><td><span class="pill red">Overdue</span></td><td><button class="btn-sm">Pay Now</button></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="section-title">Invoice History</div>
+          <div class="table-scroll"><table class="dtable">
+            <thead><tr><th>Invoice</th><th>Date</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="mono">INV-40602</td><td>Jul 30, 2026</td><td>$998.00</td><td><span class="pill green">Paid</span></td><td><button class="btn-sm">PDF</button></td></tr>
+              <tr><td class="mono">INV-40415</td><td>Jun 20, 2026</td><td>$342.00</td><td><span class="pill green">Paid</span></td><td><button class="btn-sm">PDF</button></td></tr>
+              <tr><td class="mono">INV-40289</td><td>May 28, 2026</td><td>$1,842.00</td><td><span class="pill green">Paid</span></td><td><button class="btn-sm">PDF</button></td></tr>
+            </tbody>
+          </table></div>
+          <div style="margin-top:14px;"><button class="btn btn-outline btn-sm2">Export All (CSV)</button></div>
+        </div>
+        <div class="card">
+          <div class="section-title">Payment Methods<a href="#" class="link">+ Add new</a></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line);">
+            <div style="display:flex; align-items:center; gap:12px;"><div style="width:38px;height:26px;background:var(--ink);border-radius:5px;"></div><div><b style="font-size:13px;">Visa •••• 4471</b><div style="font-size:11.5px;color:var(--muted);">Expires 04/28</div></div></div>
+            <span class="pill green">Default</span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0;">
+            <div style="display:flex; align-items:center; gap:12px;"><div style="width:38px;height:26px;background:#5b6b8c;border-radius:5px;"></div><div><b style="font-size:13px;">ACH — Chase ••1029</b><div style="font-size:11.5px;color:var(--muted);">Bank transfer</div></div></div>
+            <button class="btn-sm">Set Default</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section class="portal-panel" id="panel-products">
+      <div class="panel-head"><div><h1>Products &amp; Pricing</h1><p>Your negotiated pricing and volume discounts, with real-time availability.</p></div></div>
+      <div class="filter-bar">
+        <select><option>All categories</option><option>Scanners</option><option>Printers</option><option>Labels &amp; Ribbons</option><option>Software</option></select>
+        <input type="text" placeholder="Search products or SKU…" style="min-width:220px;">
+      </div>
+      <div class="card" style="padding:0;">
+        <div class="table-scroll"><table class="dtable">
+          <thead><tr><th>SKU</th><th>Product</th><th>List Price</th><th>Your Price</th><th>Volume Break</th><th>Availability</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="mono">WWS550</td><td>WWS550 Barcode Scanner</td><td>$289.00</td><td class="price-cell yours">$269.00</td><td>10+: $249.00</td><td><span class="stock-dot in">In Stock</span></td><td><button class="btn-sm">Add</button></td></tr>
+            <tr><td class="mono">WPL305</td><td>WPL305 Label Printer</td><td>$549.00</td><td class="price-cell yours">$499.00</td><td>5+: $469.00</td><td><span class="stock-dot out">Backordered</span></td><td><button class="btn-sm">Notify Me</button></td></tr>
+            <tr><td class="mono">LBL-PGW-1x1</td><td>Polyester Gloss Labels 1"×1"</td><td>$27.00</td><td class="price-cell yours">$24.30</td><td>25+ rolls: $21.60</td><td><span class="stock-dot low">Low Stock</span></td><td><button class="btn-sm">Add</button></td></tr>
+            <tr><td class="mono">LBL-VDW-2x1</td><td>Vinyl Destructible Labels 2"×1"</td><td>$38.00</td><td class="price-cell yours">$34.20</td><td>25+ rolls: $30.40</td><td><span class="stock-dot in">In Stock</span></td><td><button class="btn-sm">Add</button></td></tr>
+            <tr><td class="mono">WI-SEAT-C</td><td>Wasp Inventory — Complete Seat</td><td>$215.00/yr</td><td class="price-cell yours">$215.00/yr</td><td>—</td><td><span class="stock-dot in">Available</span></td><td><button class="btn-sm">Add</button></td></tr>
+            <tr><td class="mono">RFID-TAG-100</td><td>RFID Tags (pack of 100)</td><td>$89.00</td><td class="price-cell yours">$80.10</td><td>10+ packs: $71.20</td><td><span class="stock-dot low">Low Stock</span></td><td><button class="btn-sm">Add</button></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- TEAM -->
+    <section class="portal-panel" id="panel-team">
+      <div class="panel-head">
+        <div><h1>Team</h1><p>Manage user seats and role-based permissions for your account.</p></div>
+        <button class="btn btn-gold" id="openInviteModal"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Invite User</button>
+      </div>
+      <div class="card" style="padding:0;">
+        <div class="table-scroll"><table class="dtable">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Last Active</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><b>Jordan Reyes</b> (you)</td><td class="mono">jordan.reyes@acmemfg.com</td><td><span class="role-badge admin">Admin</span></td><td>Today</td><td><span class="pill green">Active</span></td><td></td></tr>
+            <tr><td>Priya Nandan</td><td class="mono">priya.n@acmemfg.com</td><td><span class="role-badge admin">Admin</span></td><td>Yesterday</td><td><span class="pill green">Active</span></td><td><button class="btn-sm">Manage</button></td></tr>
+            <tr><td>Marcus Webb</td><td class="mono">marcus.webb@acmemfg.com</td><td><span class="role-badge">Member</span></td><td>2 days ago</td><td><span class="pill green">Active</span></td><td><button class="btn-sm">Manage</button></td></tr>
+            <tr><td>Danny Ortiz</td><td class="mono">danny.o@acmemfg.com</td><td><span class="role-badge">Member</span></td><td>1 week ago</td><td><span class="pill green">Active</span></td><td><button class="btn-sm">Manage</button></td></tr>
+            <tr><td>Keisha Monroe</td><td class="mono">keisha.m@acmemfg.com</td><td><span class="role-badge">Viewer</span></td><td>3 weeks ago</td><td><span class="pill amber">Invited</span></td><td><button class="btn-sm">Resend</button></td></tr>
+            <tr><td>Tom Bracey</td><td class="mono">tom.bracey@acmemfg.com</td><td><span class="role-badge">Member</span></td><td>2 months ago</td><td><span class="pill red">Suspended</span></td><td><button class="btn-sm">Manage</button></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- SUPPORT -->
+    <section class="portal-panel" id="panel-support">
+      <div class="panel-head">
+        <div><h1>Support</h1><p>Track open tickets, submit a new request, or search the knowledge base.</p></div>
+        <button class="btn btn-gold">Submit a Ticket</button>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="section-title">Your Tickets</div>
+          <div class="ticket-row">
+            <div class="num">#4471</div>
+            <div class="subj">WPL305 printer not connecting via USB<div class="meta">Updated 2 hours ago</div></div>
+            <span class="pill amber">Awaiting Your Reply</span>
+          </div>
+          <div class="ticket-row">
+            <div class="num">#4438</div>
+            <div class="subj">Question about RFID tag bulk pricing<div class="meta">Updated yesterday</div></div>
+            <span class="pill blue">In Progress</span>
+          </div>
+          <div class="ticket-row">
+            <div class="num">#4390</div>
+            <div class="subj">Seat count discrepancy after renewal<div class="meta">Closed Aug 14</div></div>
+            <span class="pill gray">Resolved</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">Knowledge Base<input type="text" placeholder="Search articles…" style="border:1.5px solid var(--line); border-radius:8px; padding:6px 10px; font-size:12px; font-family:inherit;"></div>
+          <div class="kb-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6z"/></svg>Setting up your first barcode scanner</div>
+          <div class="kb-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6z"/></svg>Adding and managing team seats</div>
+          <div class="kb-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6z"/></svg>Understanding your invoice and credit terms</div>
+          <div class="kb-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6z"/></svg>Troubleshooting printer connectivity</div>
+          <div class="kb-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6z"/></svg>Bulk reordering from past orders</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACCOUNT MANAGER -->
+    <section class="portal-panel" id="panel-accountmgr">
+      <div class="panel-head"><div><h1>Your Account Manager</h1><p>A direct line to the person who knows your account.</p></div></div>
+      <div class="grid2">
+        <div class="card">
+          <div class="am-card">
+            <div class="am-avatar" style="width:72px;height:72px;font-size:26px;">RC</div>
+            <div>
+              <h4 style="font-size:18px;">Renee Castillo</h4>
+              <div class="role">Senior Account Manager · Wasp Barcode Technologies</div>
+              <div style="font-size:12.5px; color:var(--muted); margin-top:4px;">renee.castillo@waspbarcode.com · 1-844-547-9277 ext. 214</div>
+              <div class="am-actions">
+                <button class="btn btn-blue"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4A8.4 8.4 0 0 1 3.6 11.5 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5Z"/></svg>Start Chat</button>
+                <button class="btn btn-outline">Schedule a Call</button>
+                <button class="btn btn-outline">Send Email</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">Shared Notes</div>
+          <div style="font-size:12.5px; color:var(--ink-soft); line-height:1.7; margin-bottom:10px;">"Following up on your Q3 scanner order — let me know if the new WWS550 batch needs adjusting." <span style="color:var(--faint);">— Aug 20</span></div>
+          <div style="font-size:12.5px; color:var(--ink-soft); line-height:1.7; margin-bottom:10px;">"Confirmed your renewal seat count at 25 — locked in your current per-seat rate through next year." <span style="color:var(--faint);">— Jul 15</span></div>
+          <div style="font-size:12.5px; color:var(--ink-soft); line-height:1.7;">"Sent over volume pricing for RFID tags — let me know if 500+/mo makes sense for your Dallas site." <span style="color:var(--faint);">— Jun 28</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHANGELOG -->
+    <section class="portal-panel" id="panel-changelog">
+      <div class="panel-head"><div><h1>What's New</h1><p>The latest features and updates, filtered to what's relevant to your plan.</p></div></div>
+      <div class="filter-bar">
+        <select><option>All updates</option><option>New</option><option>Improved</option><option>Fixed</option></select>
+      </div>
+      <div class="card">
+        <div class="change-item" style="padding-top:0;">
+          <span class="change-tag new">New</span>
+          <div><div class="date">Aug 26, 2026</div><h4>Bulk reorder from order history</h4><p>Select multiple past orders in your history and reorder every line item in a single click.</p></div>
+        </div>
+        <div class="change-item">
+          <span class="change-tag improved">Improved</span>
+          <div><div class="date">Aug 18, 2026</div><h4>Faster invoice search</h4><p>Filter invoices by status, PO number, or due date range — results now load instantly.</p></div>
+        </div>
+        <div class="change-item">
+          <span class="change-tag new">New</span>
+          <div><div class="date">Aug 5, 2026</div><h4>Back-in-stock notifications</h4><p>Get notified the moment a backordered item you've ordered before is available again.</p></div>
+        </div>
+        <div class="change-item">
+          <span class="change-tag fixed">Fixed</span>
+          <div><div class="date">Jul 29, 2026</div><h4>Seat count sync after renewal</h4><p>Resolved an issue where seat counts could briefly show stale data right after a renewal.</p></div>
+        </div>
+        <div class="change-item">
+          <span class="change-tag improved">Improved</span>
+          <div><div class="date">Jul 12, 2026</div><h4>Batch invoice payment</h4><p>Select multiple outstanding invoices and pay them together in one transaction.</p></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="modal-overlay" id="inviteModal">
+  <div class="modal-box" style="position:relative;">
+    <button class="modal-close" id="closeInviteModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <h3>Invite a Team Member</h3>
+    <label>Email address</label>
+    <input type="text" placeholder="name@company.com">
+    <label>Role</label>
+    <select><option>Admin</option><option selected>Member</option><option>Viewer</option></select>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="cancelInvite" style="flex:1;">Cancel</button>
+      <button class="btn btn-gold" style="flex:1;">Send Invite</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var links = document.querySelectorAll('.side-link');
+  var panels = document.querySelectorAll('.portal-panel');
+  function goTo(name){
+    links.forEach(function(l){ l.classList.toggle('active', l.dataset.panel === name); });
+    panels.forEach(function(p){ p.classList.toggle('active', p.id === 'panel-' + name); });
+    document.getElementById('sidebar').classList.remove('open');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  links.forEach(function(l){ l.addEventListener('click', function(){ goTo(l.dataset.panel); }); });
+  document.querySelectorAll('[data-goto]').forEach(function(el){
+    el.addEventListener('click', function(e){ e.preventDefault(); goTo(el.dataset.goto); });
+  });
+
+  var navToggle = document.getElementById('navToggle');
+  if (navToggle) navToggle.addEventListener('click', function(){ document.getElementById('sidebar').classList.toggle('open'); });
+
+  var inviteModal = document.getElementById('inviteModal');
+  document.getElementById('openInviteModal').addEventListener('click', function(){ inviteModal.classList.add('show'); });
+  document.getElementById('closeInviteModal').addEventListener('click', function(){ inviteModal.classList.remove('show'); });
+  document.getElementById('cancelInvite').addEventListener('click', function(){ inviteModal.classList.remove('show'); });
+  inviteModal.addEventListener('click', function(e){ if (e.target === inviteModal) inviteModal.classList.remove('show'); });
+
+  var qo = document.getElementById('quickOrderInput');
+  qo.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && qo.value.trim()) {
+      goTo('products');
+      qo.value = '';
+    }
+  });
+});
+</script>
+
+</body>
+</html>

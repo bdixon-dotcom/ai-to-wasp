@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wasp Barcode Technologies | Unified Asset & Inventory Tracking</title>
-<meta name="description" content="Track every asset and item, everywhere. Barcode, QR, RFID and GPS tracking in one unified Wasp platform.">
+<title>Custom Barcode and QR Code Generator | Wasp Barcode Technologies</title>
+<meta name="description" content="Instantly create Code 39, Code 128, EAN, UPC barcodes or QR codes using Wasp's free online barcode generator.">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -193,158 +193,277 @@
 </header>
 
 <main>
-<section class="home-hero">
-  <div class="home-hero-media">
-    <img src="https://loremflickr.com/1600/900/warehouse,scanner" alt="Warehouse worker scanning inventory with a handheld device">
-  </div>
-  <div class="home-hero-content">
-    <div class="wrap">
-      <h1>One Unified System.<br><span class="accent">Every Asset. Every Item.</span><br>Everywhere.</h1>
-      <p>Real-time visibility across your assets and inventory for total control, smarter operations, and better results.</p>
-      <div class="cta-row">
-        <a href="demo.html" class="btn btn-gold btn-lg">Request a Demo</a>
-        <a href="platform.html" class="btn btn-outline-light btn-lg">Explore Solutions</a>
-      </div>
-    </div>
+<script src="jsbarcode.min.js"></script>
+<script src="qrcode.min.js"></script>
+
+<section class="category-hero" style="padding-bottom:6px;">
+  <div class="wrap">
+    <div class="badge-pill">Free Tool</div>
+    <h1>Create Free Barcodes in Seconds</h1>
+    <p>Generate printable barcodes instantly for inventory, asset tracking, labeling, shipping, and more.</p>
   </div>
 </section>
 
-<section class="benefits-dark">
-  <div class="wrap">
-    <div class="benefits-row">
-      <div class="benefit">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-6.9 7-12a7 7 0 1 0-14 0c0 5.1 7 12 7 12Z"/><circle cx="12" cy="9" r="2.4"/></svg></div>
-        <h4>Real-Time Visibility</h4>
-        <p>Know where assets and inventory are and how they're used.</p>
-      </div>
-      <div class="benefit">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
-        <h4>Instant Alerts</h4>
-        <p>Get notified about movement, thresholds and exceptions.</p>
-      </div>
-      <div class="benefit">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="5.5" r="2.6"/><circle cx="18" cy="18.5" r="2.6"/><path d="M8.3 10.8 15.7 6.7M8.3 13.2l7.4 4.1"/></svg></div>
-        <h4>Streamlined Operations</h4>
-        <p>Automate workflows and eliminate manual work.</p>
-      </div>
-      <div class="benefit">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg></div>
-        <h4>Better Decisions</h4>
-        <p>Leverage data to improve productivity and reduce costs.</p>
-      </div>
-      <div class="benefit">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l7 3v6c0 5-3.5 7.8-7 9-3.5-1.2-7-4-7-9V6l7-3Z"/><path d="M9 12l2 2 4-4" stroke-linecap="round"/></svg></div>
-        <h4>Built for Any Environment</h4>
-        <p>Rugged, reliable and ready for any industry.</p>
+<div class="wrap" style="margin:32px auto 60px;">
+  <div class="bc-tool">
+    <div class="bc-controls">
+      <label for="bcType">1. Select Type of Code</label>
+      <select id="bcType">
+        <option value="CODE128">Code 128</option>
+        <option value="CODE39">Code 3 of 9 Standard</option>
+        <option value="CODE93">Code 93</option>
+        <option value="ITF">Interleave 2 of 5</option>
+        <option value="codabar">Codabar</option>
+        <option value="MSI">MSI Plessey</option>
+        <option value="UPC">UPC-A</option>
+        <option value="UPCE">UPC-E</option>
+        <option value="EAN13">EAN-13</option>
+        <option value="EAN8">EAN-8</option>
+        <option value="POSTNET">U.S. Postal Code</option>
+        <option value="QR">QR Code</option>
+      </select>
+      <p class="bc-hint" id="bcHint">Most versatile format. Supports letters, numbers and symbols.</p>
+
+      <label for="bcText">2. Type Your Text</label>
+      <input type="text" id="bcText" value="WASP-A1234" placeholder="Enter text or numbers to encode">
+      <div class="bc-error" id="bcError"></div>
+
+      <button type="button" class="btn btn-gold btn-lg" id="bcGenerate">Generate Code</button>
+    </div>
+    <div class="bc-preview">
+      <div class="bc-canvas-wrap" id="bcCanvasWrap"><span class="empty">Your code will generate here</span></div>
+      <div class="bc-actions">
+        <button type="button" class="btn btn-outline-dark" id="bcDownload">Download PNG</button>
       </div>
     </div>
   </div>
-</section>
+</div>
+
+<script>
+(function(){
+  var BARCODE_TYPES = {
+    CODE128: { label:'Code 128', hint:"Most versatile format. Supports letters, numbers and symbols.", placeholder:'WASP-A1234', kind:'jsbarcode', format:'CODE128' },
+    CODE39:  { label:'Code 39', hint:'Supports A-Z, 0-9, space, and - . $ / + %.', placeholder:'WASP123', kind:'jsbarcode', format:'CODE39' },
+    CODE93:  { label:'Code 93', hint:'Compact alphanumeric code, similar to Code 39.', placeholder:'WASP123', kind:'jsbarcode', format:'CODE93' },
+    ITF:     { label:'Interleave 2 of 5', hint:'Numeric only. Enter an even number of digits.', placeholder:'123456', kind:'jsbarcode', format:'ITF' },
+    codabar: { label:'Codabar', hint:'Numeric plus - $ : / . + — often used in libraries and blood banks.', placeholder:'A123456A', kind:'jsbarcode', format:'codabar' },
+    MSI:     { label:'MSI Plessey', hint:'Numeric only. Common in warehousing and shelf labeling.', placeholder:'123456', kind:'jsbarcode', format:'MSI' },
+    UPC:     { label:'UPC-A', hint:'Enter 11 or 12 digits — the standard US retail barcode.', placeholder:'03600029145', kind:'jsbarcode', format:'UPC' },
+    UPCE:    { label:'UPC-E', hint:'Enter 6 digits — a compressed code for small packages.', placeholder:'425261', kind:'jsbarcode', format:'UPCE' },
+    EAN13:   { label:'EAN-13', hint:'Enter 12 or 13 digits — the international retail barcode.', placeholder:'590123412345', kind:'jsbarcode', format:'EAN13' },
+    EAN8:    { label:'EAN-8', hint:'Enter 7 or 8 digits — for smaller retail packaging.', placeholder:'9638507', kind:'jsbarcode', format:'EAN8' },
+    POSTNET: { label:'U.S. Postal Code', hint:'POSTNET requires specialized postal encoding — contact our team for support with this format.', placeholder:'', kind:'unsupported' },
+    QR:      { label:'QR Code', hint:'Stores up to 4,000+ characters — URLs, text, contact info and more.', placeholder:'https://www.waspbarcode.com', kind:'qr' }
+  };
+
+  var typeEl = document.getElementById('bcType');
+  var hintEl = document.getElementById('bcHint');
+  var textEl = document.getElementById('bcText');
+  var errorEl = document.getElementById('bcError');
+  var wrapEl = document.getElementById('bcCanvasWrap');
+  var lastSvg = null;
+
+  function updateHint() {
+    var cfg = BARCODE_TYPES[typeEl.value];
+    hintEl.textContent = cfg.hint;
+    if (cfg.placeholder) textEl.placeholder = cfg.placeholder;
+    errorEl.classList.remove('show');
+  }
+  typeEl.addEventListener('change', updateHint);
+
+  function showError(msg) {
+    wrapEl.innerHTML = '<span class="empty">Your code will generate here</span>';
+    errorEl.textContent = msg;
+    errorEl.classList.add('show');
+    lastSvg = null;
+  }
+
+  function generate() {
+    var cfg = BARCODE_TYPES[typeEl.value];
+    var text = textEl.value.trim();
+    errorEl.classList.remove('show');
+
+    if (cfg.kind === 'unsupported') { showError(cfg.hint); return; }
+    if (!text) { showError('Enter some text or numbers to encode.'); return; }
+
+    if (cfg.kind === 'qr') {
+      try {
+        var qr = null;
+        for (var tn = 1; tn <= 40; tn++) {
+          try {
+            var candidate = qrcode(tn, 'M');
+            candidate.addData(text);
+            candidate.make();
+            qr = candidate;
+            break;
+          } catch (sizeErr) { /* try next size */ }
+        }
+        if (!qr) throw new Error('too long');
+        wrapEl.innerHTML = qr.createSvgTag(5, 8);
+        lastSvg = wrapEl.querySelector('svg');
+      } catch (e) {
+        showError('Could not generate a QR code for that input.');
+      }
+      return;
+    }
+
+    wrapEl.innerHTML = '';
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    wrapEl.appendChild(svg);
+    try {
+      JsBarcode(svg, text, { format: cfg.format, width: 2.2, height: 90, displayValue: true, fontSize: 15, margin: 12, lineColor: '#0d0d0d' });
+      lastSvg = svg;
+    } catch (e) {
+      showError("That value isn't valid for " + cfg.label + '. ' + cfg.hint);
+    }
+  }
+  document.getElementById('bcGenerate').addEventListener('click', generate);
+  textEl.addEventListener('keydown', function(e){ if (e.key === 'Enter') generate(); });
+
+  document.getElementById('bcDownload').addEventListener('click', function(){
+    if (!lastSvg) { showError('Generate a code first, then download it.'); return; }
+    var svgData = new XMLSerializer().serializeToString(lastSvg);
+    var svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    var url = URL.createObjectURL(svgBlob);
+    var img = new Image();
+    img.onload = function(){
+      var scale = 3;
+      var canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(function(blob){
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'wasp-barcode.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+    };
+    img.src = url;
+  });
+
+  generate();
+})();
+</script>
 
 <section class="pad-top">
   <div class="wrap">
-    <div class="section-head">
-      <h2>Track Everything That Moves and Matters</h2>
-      <p>One platform. Complete visibility. Smarter operations.</p>
+    <div class="section-head" style="margin-bottom:34px;">
+      <h2>What Will You Use These Barcodes For?</h2>
     </div>
-    <div class="cat-row">
-      <div><div class="ic" style="color:var(--scan-barcode)"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="2" height="16" fill="currentColor"/><rect x="6" y="4" width="1" height="16" fill="currentColor"/><rect x="9" y="4" width="2" height="16" fill="currentColor"/><rect x="13" y="4" width="1" height="16" fill="currentColor"/><rect x="16" y="4" width="2" height="16" fill="currentColor"/><rect x="20" y="4" width="1" height="16" fill="currentColor"/></svg></div><b>Barcode Tracking</b><span>Products, parts, tools & more</span></div>
-      <div><div class="ic" style="color:var(--scan-qr)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM18 18h3v3h-3z" fill="currentColor" stroke="none"/></svg></div><b>QR Code Tracking</b><span>Work orders, assets & locations</span></div>
-      <div><div class="ic" style="color:var(--scan-rfid)"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="19" r="1.6" fill="currentColor"/><path d="M7 15.5a7 7 0 0 1 10 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M3.5 12a12 12 0 0 1 17 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div><b>RFID Tracking</b><span>High-value assets & inventory</span></div>
-      <div><div class="ic" style="color:var(--scan-gps)"><svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-7.4 7-13a7 7 0 1 0-14 0c0 5.6 7 13 7 13Z" fill="currentColor"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg></div><b>GPS Tracking</b><span>Vehicles, equipment & mobile assets</span></div>
-      <div><div class="ic" style="color:var(--blue)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg></div><b>Actionable Insights</b><span>Real-time data to drive better decisions</span></div>
-    </div>
-
-    <div class="howit-box">
-      <h3>How It Works</h3>
-      <div class="flow-track">
-        <div class="flow-step">
-          <div class="flow-icon"><svg viewBox="0 0 48 48" fill="none" stroke="var(--ink)" stroke-width="1.6"><rect x="8" y="12" width="26" height="17" rx="2"/><path d="M8 33h26"/><rect x="30" y="22" width="10" height="8" rx="1.5" fill="var(--scan-barcode)" stroke="none"/></svg></div>
-          <h4>Identify &amp; Tag</h4>
-          <p>Label and identify assets, items and tools</p>
-        </div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h18M14 1l6 6-6 6"/></svg></div>
-        <div class="flow-step">
-          <div class="flow-icon"><svg viewBox="0 0 48 48" fill="none" stroke="var(--ink)" stroke-width="1.6"><rect x="10" y="18" width="20" height="16" rx="2"/><path d="M10 24h20"/><circle cx="32" cy="16" r="9" fill="none" stroke="var(--scan-qr)"/><path d="M28 16l2.5 2.5L36 13" stroke="var(--scan-qr)"/></svg></div>
-          <h4>Capture &amp; Check</h4>
-          <p>Scan and verify in real time, anywhere</p>
-        </div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h18M14 1l6 6-6 6"/></svg></div>
-        <div class="flow-step">
-          <div class="flow-icon"><svg viewBox="0 0 48 48" fill="none" stroke="var(--ink)" stroke-width="1.6"><rect x="7" y="9" width="26" height="18" rx="2"/><path d="M16 32h8"/><circle cx="37" cy="34" r="7" stroke="var(--scan-rfid)"/><path d="M37 31v3l2 2" stroke="var(--scan-rfid)"/></svg></div>
-          <h4>Track &amp; Manage</h4>
-          <p>See location, status &amp; levels across all items</p>
-        </div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h18M14 1l6 6-6 6"/></svg></div>
-        <div class="flow-step">
-          <div class="flow-icon"><svg viewBox="0 0 48 48" fill="none" stroke="var(--ink)" stroke-width="1.6"><rect x="12" y="8" width="22" height="30" rx="2"/><path d="M18 4h10v6H18z"/><path d="M18 20l3 3 7-7M18 29l3 3 7-7" stroke="var(--gold-dark)"/></svg></div>
-          <h4>Report &amp; Optimize</h4>
-          <p>Generate reports and improve performance</p>
-        </div>
+    <div class="bc-usecase-row">
+      <div class="bc-usecase">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-6.9 7-12a7 7 0 1 0-14 0c0 5.1 7 12 7 12Z"/><circle cx="12" cy="9" r="2.4"/></svg></div>
+        <h4>Track Company Assets</h4>
+      </div>
+      <div class="bc-usecase">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg></div>
+        <h4>Label Products</h4>
+      </div>
+      <div class="bc-usecase">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg></div>
+        <h4>Manage Inventory</h4>
+      </div>
+      <div class="bc-usecase">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"/></svg></div>
+        <h4>Personal Use</h4>
       </div>
     </div>
   </div>
 </section>
 
-<section class="pad-bot">
+<section class="pillar-section">
   <div class="wrap">
-    <div class="section-head">
-      <h2>Manage Assets and Inventory in One Place</h2>
-      <p>From receiving to retirement, Wasp gives you real-time visibility and control over what you have, where it is, and how it's used.</p>
+    <div class="pillar-head">
+      <h2>Barcodes Are Just the First Step</h2>
+      <p>A barcode by itself is just a label. Pair it with Wasp software to actually track what it represents — location, status, quantity and history — in real time.</p>
     </div>
-    <div class="split-two">
-      <div class="split-card">
-        <img src="https://loremflickr.com/700/460/loader,construction" alt="Wheel loader tracked as a company asset">
-        <div class="body">
-          <h3>Asset Management</h3>
-          <ul>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Track equipment, tools &amp; vehicles</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Monitor utilization &amp; maintenance</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Reduce downtime &amp; extend asset life</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Stay audit-ready and compliant</li>
-          </ul>
+    <div class="built-grid" style="grid-template-columns:1fr 1fr; gap:24px;">
+      <div class="label-card" style="display:block;">
+        <div class="ph" style="height:220px;"><img src="https://loremflickr.com/700/500/technician,equipment,scanner" alt="Technician scanning a tagged piece of equipment" style="width:100%; height:100%; object-fit:cover;"></div>
+        <div class="body" style="padding:26px;">
+          <h4 style="font-size:16px; margin-bottom:10px;">Track Every Asset You Label</h4>
+          <p style="font-size:13.5px; margin-bottom:18px;">Know where equipment is, who has it, and its full history — without spreadsheets. Scan with your phone or a handheld device, assign assets to employees or locations, and track check-in/check-out activity automatically.</p>
+          <a href="asset-tracking.html" class="btn btn-outline-dark">Learn About Asset Tracking</a>
         </div>
       </div>
-      <div class="split-card">
-        <img src="https://loremflickr.com/700/460/warehouse,shelves" alt="Warehouse aisle stocked with inventory">
-        <div class="body">
-          <h3>Inventory Management</h3>
-          <ul>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Track stock, supplies &amp; parts</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Optimize levels &amp; reorder points</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Prevent stockouts and overstock</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Speed up picking &amp; fulfillment</li>
-          </ul>
+      <div class="label-card" style="display:block;">
+        <div class="ph" style="height:220px;"><img src="https://loremflickr.com/700/500/warehouse,inventory,shelves" alt="Warehouse shelving stocked with labeled inventory" style="width:100%; height:100%; object-fit:cover;"></div>
+        <div class="body" style="padding:26px;">
+          <h4 style="font-size:16px; margin-bottom:10px;">Label Products, Then Track Them</h4>
+          <p style="font-size:13.5px; margin-bottom:18px;">Creating barcodes is step one. Add tracking to monitor product movement, stock levels and performance over time — updating inventory instantly with every scan.</p>
+          <a href="inventory-management.html" class="btn btn-outline-dark">Learn About Inventory Management</a>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="industries">
+<section class="pad-top pad-bot">
   <div class="wrap">
-    <h2>Built for Every Industry</h2>
-    <p class="desc">Wasp helps organizations across the board track what matters most.</p>
-    <div class="industry-row cols-7">
-      <a href="construction.html" class="industry"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="21" x2="6" y2="3"/><line x1="6" y1="3" x2="21" y2="8"/><line x1="6" y1="3" x2="3" y2="6"/><line x1="6" y1="9" x2="17" y2="12.3"/><line x1="17" y1="12.3" x2="17" y2="18"/><line x1="3" y1="21" x2="11" y2="21"/></svg></div><span>Construction</span></a>
-      <a href="manufacturing-industry.html" class="industry"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 21V9l5 3V9l5 3V9l5 3v9H3Z"/></svg></div><span>Manufacturing</span></a>
-      <a href="healthcare.html" class="industry"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></div><span>Healthcare</span></a>
-      <a href="education.html" class="industry"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 9l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></div><span>Education</span></a>
-      <a href="field-service.html" class="industry"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 13h13l4 4v3H3z"/><circle cx="7.5" cy="20" r="1.6"/><circle cx="16.5" cy="20" r="1.6"/><path d="M8 13V7h5v6"/></svg></div><span>Field Services</span></a>
-      <a href="warehouse-management.html" class="industry"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="7" width="12" height="10"/><path d="M15 10h3l3 3v4h-6z"/><circle cx="7.5" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg></div><span>Logistics</span></a>
-      <a href="government.html" class="industry"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 21h16M5 21V10l7-6 7 6v11M9 21v-5h6v5"/></svg></div><span>Government</span></a>
+    <div class="section-head" style="margin-bottom:34px;">
+      <h2>Which Barcode Should You Choose?</h2>
+      <p>Different barcode types hold different content and aren't all readable by the same scanners. Here's a quick guide to each format.</p>
     </div>
-    <div class="center-cta"><a href="industries.html" class="btn btn-outline-dark">Explore all industries →</a></div>
+    <div class="bc-type-grid">
+      <div class="bc-type-card"><h4>Code 39</h4><p>The most widely supported barcode. Stores letters, numbers and a handful of symbols, and can be read by almost any scanner.</p></div>
+      <div class="bc-type-card"><h4>Code 128</h4><p>Stores any alphanumeric character more efficiently than Code 39, making it a strong default for asset and inventory tracking.</p></div>
+      <div class="bc-type-card"><h4>Interleave 2 of 5</h4><p>Numbers only. Commonly used for industrial and master carton labeling.</p></div>
+      <div class="bc-type-card"><h4>Codabar</h4><p>An older numeric-based format still commonly used in libraries and blood banks.</p></div>
+      <div class="bc-type-card"><h4>Code 93</h4><p>Similar to Code 39 but more compact, letting you store more characters in less space.</p></div>
+      <div class="bc-type-card"><h4>MSI Plessey</h4><p>A numeric-only format commonly used in warehousing and shelf/inventory labeling.</p></div>
+      <div class="bc-type-card"><h4>UPC-A</h4><p>The standard 12-digit retail barcode used at checkout across the US and Canada.</p></div>
+      <div class="bc-type-card"><h4>UPC-E</h4><p>A compressed 6-digit version of UPC-A, used to fit small packages like paperbacks.</p></div>
+      <div class="bc-type-card"><h4>EAN-13</h4><p>The international counterpart to UPC-A, widely used for retail products outside North America.</p></div>
+      <div class="bc-type-card"><h4>EAN-8</h4><p>A shortened EAN format for smaller retail packaging that can't fit a full EAN-13.</p></div>
+      <div class="bc-type-card"><h4>U.S. Postal Code</h4><p>Also called POSTNET — used by the US Postal Service for mail routing and delivery.</p></div>
+      <div class="bc-type-card"><h4>QR Code</h4><p>A two-dimensional code that can hold thousands of characters, including URLs and contact details — scannable by any modern smartphone.</p></div>
+    </div>
   </div>
 </section>
+
+<div class="faq">
+  <h2>Frequently Asked Questions</h2>
+  <div class="faq-item open">
+    <div class="faq-q">What is a barcode generator?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="faq-a"><p>A barcode generator converts data — like a product number, SKU, or asset ID — into a scannable image that can be printed or scanned. This tool creates common 1D and 2D formats like Code 128, Code 39, UPC-A, EAN-13, and QR Codes directly in your browser, with no account or payment required.</p></div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">How do I print a barcode after I create it?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="faq-a"><p>Download the PNG image and print it from any standard application. For occasional use, a regular inkjet or laser printer with label sheets works fine. For higher-volume or more durable labels, a thermal barcode printer produces sharper results that hold up better in warehouse, shipping and asset-tracking environments.</p></div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">What's the difference between UPC, EAN, Code 128, Code 39 and QR codes?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="faq-a"><p>UPC and EAN are retail point-of-sale codes — UPC is standard in the US and Canada, EAN internationally. Code 128 and Code 39 are used for inventory, asset tracking and warehouse labeling; Code 128 stores data more efficiently. QR Codes are two-dimensional and can store far more information, including URLs and contact details, and can be scanned with most smartphone cameras.</p></div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">What's the difference between 1D and 2D barcodes?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="faq-a"><p>1D (linear) barcodes like UPC, EAN, Code 128 and Code 39 store data in a single row of bars and scan very quickly, which is why they're common in retail and shipping. 2D barcodes like QR Codes store data in a grid and can hold much more information, and can be scanned with a smartphone camera as well as dedicated scanners.</p></div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Can I generate barcodes in bulk?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="faq-a"><p>This tool is built for creating individual barcodes one at a time. For bulk generation involving hundreds or thousands of unique codes, Wasp Inventory and Wasp Asset both include built-in barcode creation and printing as part of the full tracking platform — most businesses managing more than 50-100 items find this a better fit than generating labels one by one.</p></div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">After I create a barcode, how do I actually track inventory or assets with it?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="faq-a"><p>A barcode by itself is just a label — to actually track inventory or assets, you need scanners and software that record each scan against a database. Wasp Inventory and Wasp Asset both pair with barcode scanners to track check-in/check-out activity, stock levels, audits and maintenance history automatically.</p></div>
+  </div>
+</div>
 
 <div class="cta-banner">
   <div class="txt">
-    <h2>Ready to See Wasp in Action?</h2>
-    <p>Book a personalized demo and see how easy asset and inventory tracking can be.</p>
-    <div><a href="demo.html" class="btn btn-gold">Request a Demo →</a></div>
+    <h2>Ready to Do More Than Just Create Barcodes?</h2>
+    <p>Talk to a Wasp tracking specialist about what your assets or inventory would look like tracked in real time.</p>
+    <div><a href="demo.html" class="btn btn-gold">Schedule a Consultation</a></div>
   </div>
-  <div class="media"><img src="https://loremflickr.com/900/700/worker,sunset" alt="Field services worker reviewing a tablet at sunset"></div>
+  <div class="media"><img src="https://loremflickr.com/900/700/warehouse,barcode,scanning" alt="Warehouse worker scanning a labeled box"></div>
 </div>
 
 </main>
